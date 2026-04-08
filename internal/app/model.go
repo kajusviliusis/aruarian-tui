@@ -2,10 +2,12 @@ package app
 
 import tea "github.com/charmbracelet/bubbletea"
 
-type Model struct{}
+type Model struct {
+	state AppState
+}
 
 func NewModel() Model {
-	return Model{}
+	return Model{state: MenuState}
 }
 
 func (m Model) Init() tea.Cmd {
@@ -23,6 +25,5 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	return "aruarian-tui\n\nStep 1: skeleton app is running.\n\nPress q to quit.\n"
+	return "aruarian-tui\n\nStep 2: root state added (currently MenuState).\n\nPress q to quit.\n"
 }
-
