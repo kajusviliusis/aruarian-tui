@@ -1,14 +1,18 @@
 package app
 
 import (
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/kajusviliusis/aruarian-tui/internal/menu"
+	"github.com/kajusviliusis/aruarian-tui/internal/timer"
 )
 
 type Model struct {
 	state AppState
 	menu  menu.Model
+	timer timer.Model
 }
 
 func NewModel() Model {
@@ -20,6 +24,7 @@ func NewModel() Model {
 			"TIMER",
 			"QUIT",
 		}),
+		timer: timer.NewModel(25 * time.Minute),
 	}
 }
 
@@ -48,11 +53,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var cmd tea.Cmd
 		m.menu, cmd = m.menu.Update(msg)
 		return m, cmd
-	case TodoState, TimerState:
+	case TodoState:
 		if key, ok := msg.(tea.KeyMsg); ok && key.String() == "esc" {
 			m.state = MenuState
 		}
 		return m, nil
+	case TimerState:
+		if key, ok := msg.(tea.KeyMsg); ok && key.String() == "esc" {
+			m.timer = m.timer.Pause()
+			m.state = MenuState
+			return m, nil
+		}
+
+		var cmd tea.Cmd
+		m.timer, cmd = m.timer.Update(msg)
+		return m, cmd
 	default:
 		return m, nil
 	}
@@ -65,7 +80,7 @@ func (m Model) View() string {
 	case TodoState:
 		return "TODO\n\nplaceholder\n\nesc: back to menu\n"
 	case TimerState:
-		return "TIMER\n\nplaceholder\n\nesc: back to menu\n"
+		return m.timer.View()
 	default:
 		return "aruarian-tui\n\nunknown state\n"
 	}
