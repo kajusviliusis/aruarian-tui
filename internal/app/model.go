@@ -7,12 +7,14 @@ import (
 
 	"github.com/kajusviliusis/aruarian-tui/internal/menu"
 	"github.com/kajusviliusis/aruarian-tui/internal/timer"
+	"github.com/kajusviliusis/aruarian-tui/internal/todo"
 )
 
 type Model struct {
 	state AppState
 	menu  menu.Model
 	timer timer.Model
+	todo  todo.Model
 }
 
 func NewModel() Model {
@@ -25,6 +27,7 @@ func NewModel() Model {
 			"QUIT",
 		}),
 		timer: timer.NewModel(25 * time.Minute),
+		todo:  todo.NewModel(),
 	}
 }
 
@@ -56,8 +59,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case TodoState:
 		if key, ok := msg.(tea.KeyMsg); ok && key.String() == "esc" {
 			m.state = MenuState
+			return m, nil
 		}
-		return m, nil
+
+		var cmd tea.Cmd
+		m.todo, cmd = m.todo.Update(msg)
+		return m, cmd
 	case TimerState:
 		if key, ok := msg.(tea.KeyMsg); ok && key.String() == "esc" {
 			m.timer = m.timer.Pause()
@@ -78,7 +85,7 @@ func (m Model) View() string {
 	case MenuState:
 		return m.menu.View()
 	case TodoState:
-		return "TODO\n\nplaceholder\n\nesc: back to menu\n"
+		return m.todo.View()
 	case TimerState:
 		return m.timer.View()
 	default:
