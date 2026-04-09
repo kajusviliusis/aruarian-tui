@@ -27,7 +27,7 @@ func NewModel() Model {
 			"QUIT",
 		}),
 		timer: timer.NewModel(25 * time.Minute),
-		todo:  todo.NewModel(),
+		todo:  todo.NewModel("todos.json"),
 	}
 }
 
