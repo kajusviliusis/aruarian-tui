@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/kajusviliusis/aruarian-tui/internal/menu"
+	"github.com/kajusviliusis/aruarian-tui/internal/notes"
 	"github.com/kajusviliusis/aruarian-tui/internal/timer"
 	"github.com/kajusviliusis/aruarian-tui/internal/todo"
 )
@@ -56,8 +57,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case menu.SelectionMsg:
 		switch typed.Selection {
 		case menu.SelectionNotes:
-			// todo: launch nvim
-			return m, nil
+			m.state = NotesState
+			return m, notes.LaunchNeovim()
 		case menu.SelectionTodo:
 			m.state = TodoState
 			return m, nil
@@ -65,6 +66,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.state = TimerState
 			return m, nil
 		}
+	case notes.ExitMsg:
+		m.state = MenuState
+		return m, nil
 	}
 
 	switch m.state {
@@ -104,6 +108,8 @@ func (m Model) View() string {
 		return m.todo.View()
 	case TimerState:
 		return m.timer.View()
+	case NotesState:
+		return "aruarian-tui\n\nOpening Neovim...\n"
 	default:
 		return "aruarian-tui\n\nunknown state\n"
 	}

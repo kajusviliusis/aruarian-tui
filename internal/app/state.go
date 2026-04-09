@@ -6,5 +6,6 @@ const (
 	MenuState AppState = iota
 	TodoState
 	TimerState
+	NotesState
 )
 
