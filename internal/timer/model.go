@@ -7,6 +7,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+const (
+	minDuration  = 1 * time.Minute
+	stepDuration = 1 * time.Minute
+)
+
 type tickMsg time.Time
 
 type Model struct {
@@ -38,6 +43,23 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		case "r":
 			m.running = false
 			m.remaining = m.defaultDuration
+		case "+", "=":
+			if m.running {
+				return m, nil
+			}
+			m.defaultDuration += stepDuration
+			m.remaining = m.defaultDuration
+		case "-":
+			if m.running {
+				return m, nil
+			}
+			if m.defaultDuration > minDuration {
+				m.defaultDuration -= stepDuration
+				if m.defaultDuration < minDuration {
+					m.defaultDuration = minDuration
+				}
+			}
+			m.remaining = m.defaultDuration
 		}
 	case tickMsg:
 		if !m.running {
@@ -63,8 +85,15 @@ func (m Model) Pause() Model {
 }
 
 func (m Model) View() string {
-	minutes := int(m.remaining / time.Minute)
+	hours := int(m.remaining / time.Hour)
+	minutes := int((m.remaining % time.Hour) / time.Minute)
 	seconds := int((m.remaining % time.Minute) / time.Second)
+	configuredMinutes := int(m.defaultDuration / time.Minute)
+
+	timeDisplay := fmt.Sprintf("%02d:%02d", minutes, seconds)
+	if hours > 0 {
+		timeDisplay = fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
+	}
 
 	status := "paused"
 	if m.running {
@@ -72,10 +101,10 @@ func (m Model) View() string {
 	}
 
 	return fmt.Sprintf(
-		"TIMER\n\n%02d:%02d (%s)\n\ns: start/pause  r: reset  esc: back to menu\n",
-		minutes,
-		seconds,
+		"TIMER\n\n%s (%s)\nconfigured: %dm\n\ns: start/pause  r: reset  +/-: duration (paused)  esc: back to menu\n",
+		timeDisplay,
 		status,
+		configuredMinutes,
 	)
 }
 
