@@ -1,6 +1,8 @@
 package app
 
 import (
+	"os"
+	"path/filepath"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -27,8 +29,22 @@ func NewModel() Model {
 			"QUIT",
 		}),
 		timer: timer.NewModel(25 * time.Minute),
-		todo:  todo.NewModel("todos.json"),
+		todo:  todo.NewModel(todoStorePath()),
 	}
+}
+
+func todoStorePath() string {
+	cfgDir, err := os.UserConfigDir()
+	if err != nil || cfgDir == "" {
+		return "todos.json"
+	}
+
+	appDir := filepath.Join(cfgDir, "aruarian-tui")
+	if err := os.MkdirAll(appDir, 0o755); err != nil {
+		return "todos.json"
+	}
+
+	return filepath.Join(appDir, "todos.json")
 }
 
 func (m Model) Init() tea.Cmd {
