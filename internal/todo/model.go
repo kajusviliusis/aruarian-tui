@@ -14,10 +14,12 @@ type Task struct {
 }
 
 type Model struct {
-	tasks     []Task
-	cursor    int
-	nextID    int
-	storePath string
+	tasks      []Task
+	cursor     int
+	nextID     int
+	storePath  string
+	editing    bool
+	editBuffer string
 }
 
 func NewModel(storePath string) Model {
@@ -46,6 +48,10 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		return m, nil
 	}
 
+	if m.editing {
+		return m.updateEditing(key)
+	}
+
 	mutated := false
 
 	switch key.String() {
@@ -60,11 +66,16 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	case "a":
 		m.tasks = append(m.tasks, Task{
 			ID:    m.nextID,
-			Title: fmt.Sprintf("Task %d", m.nextID),
+			Title: "Task",
 		})
 		m.nextID++
 		m.cursor = len(m.tasks) - 1
 		mutated = true
+	case "e":
+		if len(m.tasks) > 0 {
+			m.editing = true
+			m.editBuffer = m.tasks[m.cursor].Title
+		}
 	case " ":
 		if len(m.tasks) > 0 {
 			m.tasks[m.cursor].Completed = !m.tasks[m.cursor].Completed
@@ -85,6 +96,39 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+func (m Model) updateEditing(key tea.KeyMsg) (Model, tea.Cmd) {
+	switch key.Type {
+	case tea.KeyEsc:
+		m.editing = false
+		m.editBuffer = ""
+	case tea.KeyEnter:
+		if len(m.tasks) > 0 {
+			title := strings.TrimSpace(m.editBuffer)
+			if title != "" {
+				m.tasks[m.cursor].Title = title
+				_ = saveTasks(m.storePath, m.tasks)
+			}
+		}
+		m.editing = false
+		m.editBuffer = ""
+	case tea.KeyBackspace:
+		runes := []rune(m.editBuffer)
+		if len(runes) > 0 {
+			m.editBuffer = string(runes[:len(runes)-1])
+		}
+	case tea.KeySpace:
+		m.editBuffer += " "
+	case tea.KeyRunes:
+		m.editBuffer += string(key.Runes)
+	}
+
+	return m, nil
+}
+
+func (m Model) Editing() bool {
+	return m.editing
 }
 
 func (m Model) View() string {
@@ -109,8 +153,15 @@ func (m Model) View() string {
 		}
 	}
 
+	if m.editing {
+		b.WriteString("\n")
+		b.WriteString(fmt.Sprintf("edit title: %s_\n", m.editBuffer))
+		b.WriteString("enter: save  esc: cancel  backspace: delete char\n")
+		return b.String()
+	}
+
 	b.WriteString("\n")
-	b.WriteString("a: add  space: toggle  d: delete  up/down or k/j: move  esc: back to menu\n")
+	b.WriteString("a: add  e: edit title  space: toggle  d: delete  up/down or k/j: move  esc: back to menu\n")
 	return b.String()
 }
 

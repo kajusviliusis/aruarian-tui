@@ -73,7 +73,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.menu, cmd = m.menu.Update(msg)
 		return m, cmd
 	case TodoState:
-		if key, ok := msg.(tea.KeyMsg); ok && key.String() == "esc" {
+		if key, ok := msg.(tea.KeyMsg); ok && key.String() == "esc" && !m.todo.Editing() {
 			m.state = MenuState
 			return m, nil
 		}
