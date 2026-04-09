@@ -7,6 +7,18 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type Selection string
+
+const (
+	SelectionNotes Selection = "NOTES"
+	SelectionTodo  Selection = "TODO"
+	SelectionTimer Selection = "TIMER"
+)
+
+type SelectionMsg struct {
+	Selection Selection
+}
+
 type Model struct {
 	items  []string
 	cursor int
@@ -30,7 +42,18 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				m.cursor++
 			}
 		case "enter":
-			if len(m.items) > 0 && m.items[m.cursor] == "QUIT" {
+			if len(m.items) == 0 {
+				return m, nil
+			}
+
+			switch m.items[m.cursor] {
+			case "NOTES":
+				return m, func() tea.Msg { return SelectionMsg{Selection: SelectionNotes} }
+			case "TODO":
+				return m, func() tea.Msg { return SelectionMsg{Selection: SelectionTodo} }
+			case "TIMER":
+				return m, func() tea.Msg { return SelectionMsg{Selection: SelectionTimer} }
+			case "QUIT":
 				return m, tea.Quit
 			}
 		}
