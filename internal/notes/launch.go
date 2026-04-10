@@ -22,8 +22,7 @@ func createNvimCmd() *exec.Cmd {
 	}
 
 	notesDir := homeDir + "/notes"
-	// Ensure notes directory exists
-	os.MkdirAll(notesDir, 0o755)
+	_ = os.MkdirAll(notesDir, 0o755)
 
 	cmd := exec.Command("nvim")
 	cmd.Dir = notesDir
@@ -33,4 +32,3 @@ func createNvimCmd() *exec.Cmd {
 
 	return cmd
 }
-

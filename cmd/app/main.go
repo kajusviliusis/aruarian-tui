@@ -12,6 +12,7 @@ import (
 
 func main() {
 	defer cleanup()
+	prepareTerminal()
 
 	p := tea.NewProgram(app.NewModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
@@ -19,10 +20,15 @@ func main() {
 	}
 }
 
+func prepareTerminal() {
+	fmt.Print("\033[2J\033[H")
+	_ = os.Stdout.Sync()
+}
+
 func cleanup() {
 	fmt.Print("\033[?25h")
 	fmt.Print("\033[?1049l")
 	fmt.Print("\033c")
-	os.Stdout.Sync()
+	_ = os.Stdout.Sync()
 }
 
