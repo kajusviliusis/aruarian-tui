@@ -9,15 +9,18 @@ import (
 
 	"github.com/kajusviliusis/aruarian-tui/internal/menu"
 	"github.com/kajusviliusis/aruarian-tui/internal/notes"
+	"github.com/kajusviliusis/aruarian-tui/internal/styles"
 	"github.com/kajusviliusis/aruarian-tui/internal/timer"
 	"github.com/kajusviliusis/aruarian-tui/internal/todo"
 )
 
 type Model struct {
-	state AppState
-	menu  menu.Model
-	timer timer.Model
-	todo  todo.Model
+	state  AppState
+	menu   menu.Model
+	timer  timer.Model
+	todo   todo.Model
+	width  int
+	height int
 }
 
 func NewModel() Model {
@@ -54,6 +57,9 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch typed := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = typed.Width
+		m.height = typed.Height
 	case menu.SelectionMsg:
 		switch typed.Selection {
 		case menu.SelectionNotes:
@@ -101,16 +107,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+	var content string
+
 	switch m.state {
 	case MenuState:
-		return m.menu.View()
+		content = m.menu.View()
 	case TodoState:
-		return m.todo.View()
+		content = m.todo.View()
 	case TimerState:
-		return m.timer.View()
+		content = m.timer.View()
 	case NotesState:
-		return "aruarian-tui\n\nOpening Neovim...\n"
+		content = "aruarian-tui\n\nOpening Neovim...\n"
 	default:
-		return "aruarian-tui\n\nunknown state\n"
+		content = "aruarian-tui\n\nunknown state\n"
 	}
+
+	return styles.CenterContent(content, m.width, m.height)
 }
