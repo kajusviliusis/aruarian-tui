@@ -6,6 +6,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/kajusviliusis/aruarian-tui/internal/menu"
 	"github.com/kajusviliusis/aruarian-tui/internal/notes"
@@ -23,12 +24,14 @@ type Model struct {
 	height int
 }
 
-const banner = `
-▗▄▖ ▗▄▄▖ ▗▖ ▗▖ ▗▄▖ ▗▄▄▖ ▗▄▄▄▖ ▗▄▖ ▗▖  ▗▖
-▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌  █  ▐▌ ▐▌▐▛▚▖▐▌
-▐▛▀▜▌▐▛▀▚▖▐▌ ▐▌▐▛▀▜▌▐▛▀▚▖  █  ▐▛▀▜▌▐▌ ▝▜▌
-▐▌ ▐▌▐▌ ▐▌▝▚▄▞▘▐▌ ▐▌▐▌ ▐▌▗▄█▄▖▐▌ ▐▌▐▌  ▐▌
-`
+const banner = `   ___   ___  __  _____   ___  _______   _  __
+  / _ | / _ \/ / / / _ | / _ \/  _/ _ | / |/ /
+ / __ |/ , _/ /_/ / __ |/ , _// // __ |/    /
+/_/ |_/_/|_|\____/_/ |_/_/|_/___/_/ |_/_/|_/`
+
+var bannerStyle = lipgloss.NewStyle().
+	Background(styles.BgColor).
+	Bold(true)
 
 func NewModel() Model {
 	return Model{
@@ -118,6 +121,8 @@ func (m Model) View() string {
 	switch m.state {
 	case MenuState:
 		content = m.menu.View()
+		renderedBanner := bannerStyle.Render(banner)
+		return styles.CenterContent(renderedBanner+"\n\n"+content, m.width, m.height)
 	case TodoState:
 		content = m.todo.View()
 	case TimerState:
@@ -126,5 +131,5 @@ func (m Model) View() string {
 		content = "unknown state\n"
 	}
 
-	return styles.CenterContent(banner+"\n\n"+content, m.width, m.height)
+	return styles.CenterContent(content, m.width, m.height)
 }
