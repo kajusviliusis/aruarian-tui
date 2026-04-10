@@ -66,9 +66,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 func (m Model) View() string {
 	var b strings.Builder
 
-	b.WriteString(styles.Header.Render("aruarian-tui"))
-	b.WriteString("\n\n")
-
 	for i, item := range m.items {
 		if i == m.cursor {
 			b.WriteString(styles.MenuItemActive.Render("❯ " + item))

@@ -23,6 +23,13 @@ type Model struct {
 	height int
 }
 
+const banner = `
+▗▄▖ ▗▄▄▖ ▗▖ ▗▖ ▗▄▖ ▗▄▄▖ ▗▄▄▄▖ ▗▄▖ ▗▖  ▗▖
+▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌  █  ▐▌ ▐▌▐▛▚▖▐▌
+▐▛▀▜▌▐▛▀▚▖▐▌ ▐▌▐▛▀▜▌▐▛▀▚▖  █  ▐▛▀▜▌▐▌ ▝▜▌
+▐▌ ▐▌▐▌ ▐▌▝▚▄▞▘▐▌ ▐▌▐▌ ▐▌▗▄█▄▖▐▌ ▐▌▐▌  ▐▌
+`
+
 func NewModel() Model {
 	return Model{
 		state: MenuState,
@@ -117,10 +124,10 @@ func (m Model) View() string {
 	case TimerState:
 		content = m.timer.View()
 	case NotesState:
-		content = "aruarian-tui\n\nOpening Neovim...\n"
+		content = "Opening Neovim...\n"
 	default:
-		content = "aruarian-tui\n\nunknown state\n"
+		content = "unknown state\n"
 	}
 
-	return styles.CenterContent(content, m.width, m.height)
+	return styles.CenterContent(banner+"\n\n"+content, m.width, m.height)
 }
