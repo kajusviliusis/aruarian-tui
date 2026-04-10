@@ -70,7 +70,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case menu.SelectionMsg:
 		switch typed.Selection {
 		case menu.SelectionNotes:
-			m.state = NotesState
 			return m, notes.LaunchNeovim()
 		case menu.SelectionTodo:
 			m.state = TodoState
@@ -123,8 +122,6 @@ func (m Model) View() string {
 		content = m.todo.View()
 	case TimerState:
 		content = m.timer.View()
-	case NotesState:
-		content = "Opening Neovim...\n"
 	default:
 		content = "unknown state\n"
 	}
