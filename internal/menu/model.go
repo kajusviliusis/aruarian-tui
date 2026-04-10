@@ -1,10 +1,11 @@
 package menu
 
 import (
-	"fmt"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/kajusviliusis/aruarian-tui/internal/styles"
 )
 
 type Selection string
@@ -64,18 +65,22 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 func (m Model) View() string {
 	var b strings.Builder
-	b.WriteString("aruarian-tui\n\n")
+
+	b.WriteString(styles.Header.Render("aruarian-tui"))
+	b.WriteString("\n\n")
 
 	for i, item := range m.items {
-		prefix := "  "
 		if i == m.cursor {
-			prefix = "> "
+			b.WriteString(styles.MenuItemActive.Render("❯ " + item))
+		} else {
+			b.WriteString(styles.MenuItem.Render("  " + item))
 		}
-		b.WriteString(fmt.Sprintf("%s%s\n", prefix, item))
+		b.WriteString("\n")
 	}
 
 	b.WriteString("\n")
-	b.WriteString("up/down or k/j: move  enter: select  q: quit\n")
-	return b.String()
+	b.WriteString(styles.Footer.Render("↑↓ or k/j: move  enter: select  q: quit"))
+
+	return styles.Container.Render(b.String())
 }
 

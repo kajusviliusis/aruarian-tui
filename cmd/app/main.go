@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -9,9 +11,18 @@ import (
 )
 
 func main() {
-	p := tea.NewProgram(app.NewModel())
+	defer cleanup()
+
+	p := tea.NewProgram(app.NewModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func cleanup() {
+	fmt.Print("\033[?25h")
+	fmt.Print("\033[?1049l")
+	fmt.Print("\033c")
+	os.Stdout.Sync()
 }
 
