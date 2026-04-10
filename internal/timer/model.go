@@ -2,9 +2,12 @@ package timer
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/kajusviliusis/aruarian-tui/internal/styles"
 )
 
 const (
@@ -95,17 +98,23 @@ func (m Model) View() string {
 		timeDisplay = fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
 	}
 
-	status := "paused"
+	status := styles.StatusPaused.Render("paused")
 	if m.running {
-		status = "running"
+		status = styles.StatusRunning.Render("running")
 	}
 
-	return fmt.Sprintf(
-		"TIMER\n\n%s (%s)\nconfigured: %dm\n\ns: start/pause  r: reset  +/-: duration (paused)  esc: back to menu\n",
-		timeDisplay,
-		status,
-		configuredMinutes,
-	)
+	var b strings.Builder
+	b.WriteString(styles.Header.Render("TIMER"))
+	b.WriteString("\n\n")
+	b.WriteString(styles.TimerDisplay.Render(timeDisplay))
+	b.WriteString("\n")
+	b.WriteString(styles.MenuItem.Render(fmt.Sprintf("status: %s", status)))
+	b.WriteString("\n")
+	b.WriteString(styles.MenuItem.Render(fmt.Sprintf("configured: %dm", configuredMinutes)))
+	b.WriteString("\n\n")
+	b.WriteString(styles.Footer.Render("s: start/pause  r: reset  +/-: duration (paused)  esc: back to menu"))
+
+	return styles.Container.Render(b.String())
 }
 
 func tickCmd() tea.Cmd {

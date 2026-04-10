@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/kajusviliusis/aruarian-tui/internal/styles"
 )
 
 type Task struct {
@@ -133,36 +135,47 @@ func (m Model) Editing() bool {
 
 func (m Model) View() string {
 	var b strings.Builder
-	b.WriteString("TODO\n\n")
+	b.WriteString(styles.Header.Render("TODO"))
+	b.WriteString("\n\n")
 
 	if len(m.tasks) == 0 {
-		b.WriteString("No tasks yet. Press 'a' to add one.\n")
+		b.WriteString(styles.MenuItem.Render("No tasks yet. Press 'a' to add one."))
+		b.WriteString("\n")
 	} else {
 		for i, task := range m.tasks {
 			prefix := "  "
+			itemStyle := styles.TaskItem
 			if i == m.cursor {
 				prefix = "> "
+				itemStyle = styles.TaskItemActive
 			}
 
 			status := "[ ]"
 			if task.Completed {
 				status = "[x]"
+				if i == m.cursor {
+					itemStyle = styles.TaskCompletedActive
+				} else {
+					itemStyle = styles.TaskCompleted
+				}
 			}
 
-			b.WriteString(fmt.Sprintf("%s%s %s\n", prefix, status, task.Title))
+			b.WriteString(itemStyle.Render(fmt.Sprintf("%s%s %s", prefix, status, task.Title)))
+			b.WriteString("\n")
 		}
 	}
 
 	if m.editing {
 		b.WriteString("\n")
-		b.WriteString(fmt.Sprintf("edit title: %s_\n", m.editBuffer))
-		b.WriteString("enter: save  esc: cancel  backspace: delete char\n")
-		return b.String()
+		b.WriteString(styles.EditInput.Render(fmt.Sprintf("edit title: %s_", m.editBuffer)))
+		b.WriteString("\n")
+		b.WriteString(styles.Footer.Render("enter: save  esc: cancel  backspace: delete char"))
+		return styles.Container.Render(b.String())
 	}
 
 	b.WriteString("\n")
-	b.WriteString("a: add  e: edit title  space: toggle  d: delete  up/down or k/j: move  esc: back to menu\n")
-	return b.String()
+	b.WriteString(styles.Footer.Render("a: add  e: edit title  space: toggle  d: delete  up/down or k/j: move  esc: back to menu"))
+	return styles.Container.Render(b.String())
 }
 
 func nextTaskID(tasks []Task) int {

@@ -51,14 +51,12 @@ var TaskItemActive = lipgloss.NewStyle().
 var TaskCompleted = lipgloss.NewStyle().
 	Padding(0, 1).
 	Foreground(Gray).
-	Strikethrough(true).
 	Background(BgColor)
 
 var TaskCompletedActive = lipgloss.NewStyle().
 	Padding(0, 1).
 	Foreground(Gray).
-	Background(DarkGray).
-	Strikethrough(true)
+	Background(DarkGray)
 
 var CheckboxUnchecked = lipgloss.NewStyle().
 	Foreground(Gray).
@@ -108,5 +106,3 @@ func CenterContent(content string, width, height int) string {
 		Background(BgColor).
 		Render(content)
 }
-
-
