@@ -1,101 +1,84 @@
 package styles
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
 var (
-	Accent = lipgloss.Color("6")
-
-	Gray = lipgloss.Color("8")
-	DarkGray = lipgloss.Color("0")
-	LightGray = lipgloss.Color("7")
-
-	Success = lipgloss.Color("2")
-	Muted = lipgloss.Color("4")
-	BgColor = lipgloss.Color("235")
+	BgColor      = lipgloss.Color("235")
+	TitleColor   = lipgloss.Color("230")
+	Accent       = lipgloss.Color("110")
+	TextColor    = lipgloss.Color("252")
+	DimColor     = lipgloss.Color("243")
+	SuccessColor = lipgloss.Color("151")
 )
 
-var Container = lipgloss.NewStyle().
-	Padding(1, 2).
-	Margin(0).
+var ContainerStyle = lipgloss.NewStyle().
+	Padding(2, 4, 2, 4).
 	Background(BgColor)
 
-var Header = lipgloss.NewStyle().
+var TitleStyle = lipgloss.NewStyle().
+	Foreground(TitleColor).
+	Bold(false).
+	Background(BgColor)
+
+var SelectedItemStyle = lipgloss.NewStyle().
 	Foreground(Accent).
-	Bold(true).
-	MarginBottom(1).
+	Bold(false).
 	Background(BgColor)
 
-var MenuItem = lipgloss.NewStyle().
-	Padding(0, 1).
-	Foreground(LightGray).
+var ItemStyle = lipgloss.NewStyle().
+	Foreground(TextColor).
 	Background(BgColor)
 
-var MenuItemActive = lipgloss.NewStyle().
-	Padding(0, 1).
+var DimTextStyle = lipgloss.NewStyle().
+	Foreground(DimColor).
+	Background(BgColor)
+
+var TimerDisplayStyle = lipgloss.NewStyle().
 	Foreground(Accent).
-	Bold(true).
-	Background(DarkGray)
-
-var TaskItem = lipgloss.NewStyle().
-	Padding(0, 1).
-	Foreground(LightGray).
 	Background(BgColor)
 
-var TaskItemActive = lipgloss.NewStyle().
-	Padding(0, 1).
+var ProgressFilledStyle = lipgloss.NewStyle().
 	Foreground(Accent).
-	Background(DarkGray)
-
-var TaskCompleted = lipgloss.NewStyle().
-	Padding(0, 1).
-	Foreground(Gray).
 	Background(BgColor)
 
-var TaskCompletedActive = lipgloss.NewStyle().
-	Padding(0, 1).
-	Foreground(Gray).
-	Background(DarkGray)
-
-var CheckboxUnchecked = lipgloss.NewStyle().
-	Foreground(Gray).
+var ProgressEmptyStyle = lipgloss.NewStyle().
+	Foreground(DimColor).
 	Background(BgColor)
 
-var CheckboxChecked = lipgloss.NewStyle().
-	Foreground(Success).
+var SuccessStyle = lipgloss.NewStyle().
+	Foreground(SuccessColor).
 	Background(BgColor)
 
-var EditInput = lipgloss.NewStyle().
+var EditInputStyle = lipgloss.NewStyle().
 	Foreground(Accent).
-	Bold(true).
 	Background(BgColor)
 
-var EditCursor = lipgloss.NewStyle().
+var EditCursorStyle = lipgloss.NewStyle().
 	Foreground(Accent).
-	Blink(true).
 	Background(BgColor)
 
-var Footer = lipgloss.NewStyle().
-	Foreground(Gray).
-	MarginTop(1).
-	Background(BgColor)
-
-var StatusRunning = lipgloss.NewStyle().
-	Foreground(Success).
-	Bold(true).
-	Background(BgColor)
-
-var StatusPaused = lipgloss.NewStyle().
-	Foreground(Gray).
-	Background(BgColor)
-
-var TimerDisplay = lipgloss.NewStyle().
-	Foreground(Accent).
-	Bold(true).
-	Align(lipgloss.Center).
-	MarginBottom(1).
-	Background(BgColor)
+var (
+	Container         = ContainerStyle
+	Header            = TitleStyle
+	MenuItem          = ItemStyle
+	MenuItemActive    = SelectedItemStyle
+	TaskItem          = ItemStyle
+	TaskItemActive    = SelectedItemStyle
+	TaskCompleted     = DimTextStyle
+	TaskCompletedActive = DimTextStyle
+	CheckboxUnchecked = DimTextStyle
+	CheckboxChecked   = SuccessStyle
+	EditInput         = EditInputStyle
+	EditCursor        = EditCursorStyle
+	Footer            = DimTextStyle
+	StatusRunning     = SuccessStyle
+	StatusPaused      = DimTextStyle
+	TimerDisplay      = TimerDisplayStyle
+)
 
 func CenterContent(content string, width, height int) string {
 	return lipgloss.NewStyle().
@@ -105,4 +88,35 @@ func CenterContent(content string, width, height int) string {
 		AlignVertical(lipgloss.Center).
 		Background(BgColor).
 		Render(content)
+}
+
+func ProgressBar(percentage float64, width int) string {
+	if width <= 0 {
+		width = 16
+	}
+
+	if percentage < 0 {
+		percentage = 0
+	}
+	if percentage > 1 {
+		percentage = 1
+	}
+
+	filled := int(float64(width) * percentage)
+	if filled > width {
+		filled = width
+	}
+
+	var b strings.Builder
+	b.WriteString(ProgressFilledStyle.Render("["))
+	for i := 0; i < width; i++ {
+		if i < filled {
+			b.WriteString(ProgressFilledStyle.Render("█"))
+		} else {
+			b.WriteString(ProgressEmptyStyle.Render("░"))
+		}
+	}
+	b.WriteString(ProgressFilledStyle.Render("]"))
+
+	return b.String()
 }

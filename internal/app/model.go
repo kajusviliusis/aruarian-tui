@@ -6,7 +6,6 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 
 	"github.com/kajusviliusis/aruarian-tui/internal/menu"
 	"github.com/kajusviliusis/aruarian-tui/internal/notes"
@@ -14,6 +13,10 @@ import (
 	"github.com/kajusviliusis/aruarian-tui/internal/timer"
 	"github.com/kajusviliusis/aruarian-tui/internal/todo"
 )
+
+const notesLaunchDelay = 120 * time.Millisecond
+
+type notesLaunchMsg struct{}
 
 type Model struct {
 	state  AppState
@@ -24,25 +27,16 @@ type Model struct {
 	height int
 }
 
-const banner = `   ___   ___  __  _____   ___  _______   _  __
-  / _ | / _ \/ / / / _ | / _ \/  _/ _ | / |/ /
- / __ |/ , _/ /_/ / __ |/ , _// // __ |/    /
-/_/ |_/_/|_|\____/_/ |_/_/|_/___/_/ |_/_/|_/`
-
-var bannerStyle = lipgloss.NewStyle().
-	Background(styles.BgColor).
-	Bold(true)
-
 func NewModel() Model {
 	return Model{
 		state: MenuState,
 		menu: menu.NewModel([]string{
-			"NOTES",
-			"TODO",
-			"TIMER",
-			"QUIT",
+			"notes",
+			"todo",
+			"timer",
+			"quit",
 		}),
-		timer: timer.NewModel(25 * time.Minute),
+		timer: timer.NewModel(1 * time.Hour),
 		todo:  todo.NewModel(todoStorePath()),
 	}
 }
@@ -73,7 +67,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case menu.SelectionMsg:
 		switch typed.Selection {
 		case menu.SelectionNotes:
-			return m, notes.LaunchNeovim()
+			m.state = NotesState
+			return m, tea.Tick(notesLaunchDelay, func(time.Time) tea.Msg { return notesLaunchMsg{} })
 		case menu.SelectionTodo:
 			m.state = TodoState
 			return m, nil
@@ -81,6 +76,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.state = TimerState
 			return m, nil
 		}
+	case notesLaunchMsg:
+		return m, notes.LaunchNeovim()
 	case notes.ExitMsg:
 		m.state = MenuState
 		return m, nil
@@ -110,26 +107,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var cmd tea.Cmd
 		m.timer, cmd = m.timer.Update(msg)
 		return m, cmd
+	case NotesState:
+		return m, nil
 	default:
 		return m, nil
 	}
 }
 
 func (m Model) View() string {
-	var content string
-
 	switch m.state {
 	case MenuState:
-		content = m.menu.View()
-		renderedBanner := bannerStyle.Render(banner)
-		return styles.CenterContent(renderedBanner+"\n\n"+content, m.width, m.height)
+		return styles.CenterContent(m.menu.View(), m.width, m.height)
 	case TodoState:
-		content = m.todo.View()
+		return styles.CenterContent(m.todo.View(), m.width, m.height)
 	case TimerState:
-		content = m.timer.View()
+		return styles.CenterContent(m.timer.View(), m.width, m.height)
+	case NotesState:
+		return styles.CenterContent(styles.ContainerStyle.Render(styles.TitleStyle.Render("opening notes...")), m.width, m.height)
 	default:
-		content = "unknown state\n"
+		return styles.CenterContent("unknown state\n", m.width, m.height)
 	}
-
-	return styles.CenterContent(content, m.width, m.height)
 }

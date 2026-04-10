@@ -25,7 +25,7 @@ type Model struct {
 
 func NewModel(defaultDuration time.Duration) Model {
 	if defaultDuration <= 0 {
-		defaultDuration = 25 * time.Minute
+		defaultDuration = 1 * time.Hour
 	}
 
 	return Model{
@@ -98,23 +98,28 @@ func (m Model) View() string {
 		timeDisplay = fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
 	}
 
-	status := styles.StatusPaused.Render("paused")
+	status := "paused"
 	if m.running {
-		status = styles.StatusRunning.Render("running")
+		status = "running"
+	}
+
+	progress := 0.0
+	if m.defaultDuration > 0 {
+		progress = float64(m.defaultDuration-m.remaining) / float64(m.defaultDuration)
 	}
 
 	var b strings.Builder
-	b.WriteString(styles.Header.Render("TIMER"))
+	b.WriteString(styles.TitleStyle.Render("deep work"))
 	b.WriteString("\n\n")
-	b.WriteString(styles.TimerDisplay.Render(timeDisplay))
+	b.WriteString(styles.TimerDisplayStyle.Render(timeDisplay + " remaining"))
 	b.WriteString("\n")
-	b.WriteString(styles.MenuItem.Render(fmt.Sprintf("status: %s", status)))
-	b.WriteString("\n")
-	b.WriteString(styles.MenuItem.Render(fmt.Sprintf("configured: %dm", configuredMinutes)))
+	b.WriteString(styles.ProgressBar(progress, 18))
 	b.WriteString("\n\n")
-	b.WriteString(styles.Footer.Render("s: start/pause  r: reset  +/-: duration (paused)  esc: back to menu"))
+	b.WriteString(styles.DimTextStyle.Render(fmt.Sprintf("%s  •  %dm", status, configuredMinutes)))
+	b.WriteString("\n\n")
+	b.WriteString(styles.DimTextStyle.Render("s: start/pause   r: reset   esc: back   +/-: adjust (paused)"))
 
-	return styles.Container.Render(b.String())
+	return styles.ContainerStyle.Render(b.String())
 }
 
 func tickCmd() tea.Cmd {

@@ -11,9 +11,9 @@ import (
 type Selection string
 
 const (
-	SelectionNotes Selection = "NOTES"
-	SelectionTodo  Selection = "TODO"
-	SelectionTimer Selection = "TIMER"
+	SelectionNotes Selection = "notes"
+	SelectionTodo  Selection = "todo"
+	SelectionTimer Selection = "timer"
 )
 
 type SelectionMsg struct {
@@ -48,13 +48,13 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			}
 
 			switch m.items[m.cursor] {
-			case "NOTES":
+			case "notes":
 				return m, func() tea.Msg { return SelectionMsg{Selection: SelectionNotes} }
-			case "TODO":
+			case "todo":
 				return m, func() tea.Msg { return SelectionMsg{Selection: SelectionTodo} }
-			case "TIMER":
+			case "timer":
 				return m, func() tea.Msg { return SelectionMsg{Selection: SelectionTimer} }
-			case "QUIT":
+			case "quit":
 				return m, tea.Quit
 			}
 		}
@@ -66,18 +66,32 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 func (m Model) View() string {
 	var b strings.Builder
 
+	b.WriteString("\n\n")
+	b.WriteString(styles.TitleStyle.Render(
+		"                             _             \n" +
+			"  __ _ _ __ _   _  __ _ _ __(_) __ _ _ __  \n" +
+			" / _` | '__| | | |/ _` | '__| |/ _` | '_ \\ \n" +
+			"| (_| | |  | |_| | (_| | |  | | (_| | | | |\n" +
+			" \\__,_|_|   \\__,_|\\__,_|_|  |_|\\__,_|_| |_|",
+	))
+	b.WriteString("\n\n")
+
 	for i, item := range m.items {
+		line := "  " + item
+		itemStyle := styles.ItemStyle
 		if i == m.cursor {
-			b.WriteString(styles.MenuItemActive.Render("❯ " + item))
-		} else {
-			b.WriteString(styles.MenuItem.Render("  " + item))
+			line = "> " + item
+			itemStyle = styles.SelectedItemStyle
 		}
+
+		b.WriteString(itemStyle.Render(line))
 		b.WriteString("\n")
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.Footer.Render("↑↓ or k/j: move  enter: select  q: quit"))
+	b.WriteString(styles.DimTextStyle.Render("calm focus."))
+	b.WriteString("\n\n")
+	b.WriteString(styles.DimTextStyle.Render("↑↓ or k/j  enter  q"))
 
-	return styles.Container.Render(b.String())
+	return styles.ContainerStyle.Render(b.String())
 }
-
