@@ -99,8 +99,10 @@ func (m Model) View() string {
 	}
 
 	status := "paused"
+	statusStyle := styles.DimTextStyle
 	if m.running {
 		status = "running"
+		statusStyle = styles.SuccessStyle
 	}
 
 	progress := 0.0
@@ -108,18 +110,25 @@ func (m Model) View() string {
 		progress = float64(m.defaultDuration-m.remaining) / float64(m.defaultDuration)
 	}
 
-	var b strings.Builder
-	b.WriteString(styles.TitleStyle.Render("deep work"))
-	b.WriteString("\n\n")
-	b.WriteString(styles.TimerDisplayStyle.Render(timeDisplay + " remaining"))
-	b.WriteString("\n")
-	b.WriteString(styles.ProgressBar(progress, 18))
-	b.WriteString("\n\n")
-	b.WriteString(styles.DimTextStyle.Render(fmt.Sprintf("%s  •  %dm", status, configuredMinutes)))
-	b.WriteString("\n\n")
-	b.WriteString(styles.DimTextStyle.Render("s: start/pause   r: reset   esc: back   +/-: adjust (paused)"))
+	digits := strings.Split(styles.RenderBigDigits(timeDisplay), "\n")
+	progressLine := styles.ProgressBar(progress, 24) + "  " + styles.DimTextStyle.Render(fmt.Sprintf("%02.0f%%", progress*100))
 
-	return styles.ContainerStyle.Render(b.String())
+	lines := []string{
+		//styles.TitleStyle.Render("deep work"),
+		"",
+	}
+	lines = append(lines, digits...)
+	lines = append(lines,
+		"",
+		styles.DimTextStyle.Render("remaining"),
+		progressLine,
+		"",
+		statusStyle.Render(fmt.Sprintf("%s  •  %dm", status, configuredMinutes)),
+		"",
+		styles.DimTextStyle.Render("s: start/pause   r: reset   esc: back   +/-: adjust (paused)"),
+	)
+
+	return styles.ContainerStyle.Render(styles.CenterLines(lines...))
 }
 
 func tickCmd() tea.Cmd {
