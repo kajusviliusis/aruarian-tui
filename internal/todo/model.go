@@ -15,12 +15,14 @@ type Task struct {
 }
 
 type Model struct {
-	tasks      []Task
-	cursor     int
-	nextID     int
-	storePath  string
-	editing    bool
-	editBuffer string
+	tasks       []Task
+	cursor      int
+	nextID      int
+	storePath   string
+	editing     bool
+	editingNew  bool
+	editBuffer  string
+	editCursor  int
 }
 
 func NewModel(storePath string) Model {
@@ -65,17 +67,19 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			m.cursor++
 		}
 	case "a":
-		m.tasks = append(m.tasks, Task{
-			ID:    m.nextID,
-			Title: "Task",
-		})
+		m.tasks = append(m.tasks, Task{ID: m.nextID})
 		m.nextID++
 		m.cursor = len(m.tasks) - 1
-		mutated = true
+		m.editing = true
+		m.editingNew = true
+		m.editBuffer = ""
+		m.editCursor = 0
 	case "e":
 		if len(m.tasks) > 0 {
 			m.editing = true
+			m.editingNew = false
 			m.editBuffer = m.tasks[m.cursor].Title
+			m.editCursor = len([]rune(m.editBuffer))
 		}
 	case " ":
 		if len(m.tasks) > 0 {
@@ -102,30 +106,85 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 func (m Model) updateEditing(key tea.KeyMsg) (Model, tea.Cmd) {
 	switch key.Type {
 	case tea.KeyEsc:
-		m.editing = false
-		m.editBuffer = ""
-	case tea.KeyEnter:
-		if len(m.tasks) > 0 {
-			title := strings.TrimSpace(m.editBuffer)
-			if title != "" {
-				m.tasks[m.cursor].Title = title
-				_ = saveTasks(m.storePath, m.tasks)
-			}
+		if m.editingNew {
+			m.removeDraftTask()
+			_ = saveTasks(m.storePath, m.tasks)
 		}
 		m.editing = false
+		m.editingNew = false
 		m.editBuffer = ""
+		m.editCursor = 0
+	case tea.KeyEnter:
+		title := strings.TrimSpace(m.editBuffer)
+		if m.editingNew {
+			if title == "" {
+				m.removeDraftTask()
+			} else if len(m.tasks) > 0 {
+				m.tasks[m.cursor].Title = title
+			}
+			_ = saveTasks(m.storePath, m.tasks)
+		} else if title != "" && len(m.tasks) > 0 {
+			m.tasks[m.cursor].Title = title
+			_ = saveTasks(m.storePath, m.tasks)
+		}
+		m.editing = false
+		m.editingNew = false
+		m.editBuffer = ""
+		m.editCursor = 0
+	case tea.KeyLeft:
+		if m.editCursor > 0 {
+			m.editCursor--
+		}
+	case tea.KeyRight:
+		if m.editCursor < len([]rune(m.editBuffer)) {
+			m.editCursor++
+		}
 	case tea.KeyBackspace:
+		if m.editCursor > 0 {
+			runes := []rune(m.editBuffer)
+			idx := m.editCursor - 1
+			runes = append(runes[:idx], runes[idx+1:]...)
+			m.editBuffer = string(runes)
+			m.editCursor--
+		}
+	case tea.KeyDelete:
 		runes := []rune(m.editBuffer)
-		if len(runes) > 0 {
-			m.editBuffer = string(runes[:len(runes)-1])
+		if m.editCursor < len(runes) {
+			runes = append(runes[:m.editCursor], runes[m.editCursor+1:]...)
+			m.editBuffer = string(runes)
 		}
 	case tea.KeySpace:
-		m.editBuffer += " "
+		m.insertEditRune(' ')
 	case tea.KeyRunes:
-		m.editBuffer += string(key.Runes)
+		for _, r := range key.Runes {
+			m.insertEditRune(r)
+		}
 	}
 
 	return m, nil
+}
+
+func (m *Model) insertEditRune(r rune) {
+	runes := []rune(m.editBuffer)
+	idx := m.editCursor
+	runes = append(runes[:idx], append([]rune{r}, runes[idx:]...)...)
+	m.editBuffer = string(runes)
+	m.editCursor++
+}
+
+func (m *Model) removeDraftTask() {
+	if !m.editingNew || len(m.tasks) == 0 {
+		return
+	}
+
+	m.tasks = append(m.tasks[:m.cursor], m.tasks[m.cursor+1:]...)
+	if len(m.tasks) == 0 {
+		m.cursor = 0
+		return
+	}
+	if m.cursor >= len(m.tasks) {
+		m.cursor = len(m.tasks) - 1
+	}
 }
 
 func (m Model) Editing() bool {
@@ -172,7 +231,7 @@ func (m Model) View() string {
 	if m.editing {
 		b.WriteString(styles.DimTextStyle.Render("edit title:"))
 		b.WriteString("\n")
-		b.WriteString(styles.EditInputStyle.Render(m.editBuffer + "_"))
+		b.WriteString(styles.EditInputStyle.Render(renderEditInput(m.editBuffer, m.editCursor)))
 		b.WriteString("\n\n")
 		b.WriteString(styles.DimTextStyle.Render("enter: save  esc: cancel  backspace: delete char"))
 		return styles.ContainerStyle.Render(b.String())
@@ -180,6 +239,20 @@ func (m Model) View() string {
 
 	b.WriteString(styles.DimTextStyle.Render("a: add  e: edit title  space: toggle  d: delete  esc: back"))
 	return styles.ContainerStyle.Render(b.String())
+}
+
+func renderEditInput(buffer string, cursor int) string {
+	runes := []rune(buffer)
+	if cursor < 0 {
+		cursor = 0
+	}
+	if cursor > len(runes) {
+		cursor = len(runes)
+	}
+
+	left := string(runes[:cursor])
+	right := string(runes[cursor:])
+	return left + "_" + right
 }
 
 func nextTaskID(tasks []Task) int {
