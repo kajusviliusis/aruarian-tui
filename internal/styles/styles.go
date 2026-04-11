@@ -179,7 +179,7 @@ func ProgressBar(percentage float64, width int) string {
 	}
 
 	var b strings.Builder
-	b.WriteString(DimTextStyle.Render("◖"))
+	b.WriteString(DimTextStyle.Render("["))
 	for i := 0; i < width; i++ {
 		if i < filled {
 			b.WriteString(ProgressFilledStyle.Render("▰"))
@@ -187,7 +187,7 @@ func ProgressBar(percentage float64, width int) string {
 			b.WriteString(ProgressEmptyStyle.Render("▱"))
 		}
 	}
-	b.WriteString(DimTextStyle.Render("◗"))
+	b.WriteString(DimTextStyle.Render("]"))
 
 	return b.String()
 }

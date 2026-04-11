@@ -111,7 +111,8 @@ func (m Model) View() string {
 	}
 
 	digits := strings.Split(styles.RenderBigDigits(timeDisplay), "\n")
-	progressLine := styles.ProgressBar(progress, 24) + "  " + styles.DimTextStyle.Render(fmt.Sprintf("%02.0f%%", progress*100))
+	progressLine := styles.ProgressBar(progress, 24)
+	percentageLine := styles.DimTextStyle.Render(fmt.Sprintf("%02.0f%%", progress*100))
 
 	lines := []string{
 		//styles.TitleStyle.Render("deep work"),
@@ -122,6 +123,7 @@ func (m Model) View() string {
 		"",
 		styles.DimTextStyle.Render("remaining"),
 		progressLine,
+		percentageLine,
 		"",
 		statusStyle.Render(fmt.Sprintf("%s  •  %dm", status, configuredMinutes)),
 		"",
