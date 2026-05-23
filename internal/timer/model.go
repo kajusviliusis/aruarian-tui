@@ -2,6 +2,7 @@ package timer
 
 import (
 	"fmt"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -72,7 +73,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		if m.remaining <= time.Second {
 			m.remaining = 0
 			m.running = false
-			return m, nil
+			return m, notifyTimerDoneCmd()
 		}
 
 		m.remaining -= time.Second
@@ -137,4 +138,11 @@ func tickCmd() tea.Cmd {
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
 		return tickMsg(t)
 	})
+}
+
+func notifyTimerDoneCmd() tea.Cmd {
+	return func() tea.Msg {
+		_ = exec.Command("notify-send", "timer is finished", "go touch grass now.").Run()
+		return nil
+	}
 }
