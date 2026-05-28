@@ -114,6 +114,10 @@ func (m Model) View() string {
 	digits := strings.Split(styles.RenderBigDigits(timeDisplay), "\n")
 	progressLine := styles.ProgressBar(progress, 24)
 	percentageLine := styles.DimTextStyle.Render(fmt.Sprintf("%02.0f%%", progress*100))
+	finishLine := ""
+	if m.running {
+		finishLine = styles.DimTextStyle.Render(fmt.Sprintf("will be finished at %s", finishTime(m.remaining)))
+	}
 
 	lines := []string{
 		//styles.TitleStyle.Render("deep work"),
@@ -127,6 +131,11 @@ func (m Model) View() string {
 		percentageLine,
 		"",
 		statusStyle.Render(fmt.Sprintf("%s  •  %dm", status, configuredMinutes)),
+	)
+	if finishLine != "" {
+		lines = append(lines, finishLine)
+	}
+	lines = append(lines,
 		"",
 		styles.DimTextStyle.Render("s: start/pause   r: reset   esc: back   +/-: adjust (paused)"),
 	)
@@ -138,6 +147,10 @@ func tickCmd() tea.Cmd {
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
 		return tickMsg(t)
 	})
+}
+
+func finishTime(remaining time.Duration) string {
+	return time.Now().Add(remaining).Format("15:04")
 }
 
 func notifyTimerDoneCmd() tea.Cmd {
